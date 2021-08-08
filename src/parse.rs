@@ -1,3 +1,4 @@
+use core::panic;
 use std::collections::HashMap;
 
 use crate::lex::{Lex, LexValue, TokenKind};
@@ -36,6 +37,11 @@ pub enum Expr {
     BinOp(Op, Box<Expr>, Box<Expr>),
 }
 
+#[derive(Debug, PartialEq)]
+pub enum Statement {
+    Assign(String, Expr),
+}
+
 #[derive(Debug)]
 pub enum CompilerErr {
     Unknown,
@@ -64,6 +70,33 @@ impl Parse {
                 (TokenKind::Hat, (3, Assoc::Right))]
                 .iter().cloned().collect(),
         }
+    }
+
+    fn parse_ident(&mut self, l: &mut Lex) -> Result<String, CompilerErr> {
+        let mut result = Err(CompilerErr::Unknown);
+        if let Some(t) = &l.cur {
+            match t.kind {
+                TokenKind::Ident => {
+                    match &t.value {
+                        LexValue::Ident(name) => {
+                            result = Ok(name.clone());
+                            l.next();
+                        },
+                        _ => panic!(),
+                    }
+                },
+                _ => panic!(),
+            }
+        }
+        result
+    }
+
+    pub fn parse_assign(&mut self, l: &mut Lex) -> Result<Statement, CompilerErr> {
+        l.expect(TokenKind::Let);
+        let name = self.parse_ident(l)?;
+        l.expect(TokenKind::Equal);
+        let expr = self.parse_expr(l, 0)?;
+        Ok(Statement::Assign(name, expr))
     }
 
     pub fn parse_expr(&mut self, l: &mut Lex, min_prec: usize) -> Result<Expr, CompilerErr> {
@@ -141,5 +174,15 @@ fn parse_expr_test() -> Result<(), CompilerErr> {
     let mut p = Parse::new();
     let result = p.parse_expr(&mut l, 0)?;
     assert_eq!(result, Expr::BinOp(Op::Add, Box::new(Expr::Lit(Value::Int(1))), Box::new(Expr::Lit(Value::Int(2)))));
+    Ok(())
+}
+
+#[test]
+fn parse_assign_test() -> Result<(), CompilerErr> {
+    let mut l = Lex::new("let my_var = 10 + 11");
+    let mut p = Parse::new();
+    let result = p.parse_assign(&mut l)?;
+    assert_eq!(result, Statement::Assign("my_var".into(), 
+        Expr::BinOp(Op::Add, Box::new(Expr::Lit(Value::Int(10))), Box::new(Expr::Lit(Value::Int(11))))));
     Ok(())
 }
