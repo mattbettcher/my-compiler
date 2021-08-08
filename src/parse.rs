@@ -8,7 +8,7 @@ pub enum Value {
     Int(i64),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Op {
     Add,
     Sub,
@@ -40,6 +40,7 @@ pub enum Expr {
 #[derive(Debug, PartialEq)]
 pub enum Statement {
     Assign(String, Expr),
+    Expr(Expr),
 }
 
 #[derive(Debug)]
@@ -91,11 +92,31 @@ impl Parse {
         result
     }
 
+    pub fn parse_statements(&mut self, l: &mut Lex) -> Result<Vec<Statement>, CompilerErr> {
+        let mut stmts = vec![];
+        // 2 type of statements for now
+        loop {
+            if let Some(t) =  &l.cur {
+                match t.kind {
+                    TokenKind::Let => { stmts.push(self.parse_assign(l)?); },
+                    _ => { 
+                        stmts.push(Statement::Expr(self.parse_expr(l, 0)?));
+                        l.expect(TokenKind::SemiColon);
+                    },
+                }    
+            } else {
+                break;
+            }
+        }
+        Ok(stmts)
+    }
+
     pub fn parse_assign(&mut self, l: &mut Lex) -> Result<Statement, CompilerErr> {
         l.expect(TokenKind::Let);
         let name = self.parse_ident(l)?;
         l.expect(TokenKind::Eq);
         let expr = self.parse_expr(l, 0)?;
+        l.expect(TokenKind::SemiColon);
         Ok(Statement::Assign(name, expr))
     }
 
