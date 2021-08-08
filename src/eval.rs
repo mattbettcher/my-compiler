@@ -30,12 +30,9 @@ impl Evaluator {
                 }
             },
             Expr::BinOp(op, lhs, rhs) => {
-                if let Ok(x) = self.compute_expr(*lhs) {
-                    if let Ok(y) = self.compute_expr(*rhs) {
-                        return self.compute_op(op, x, y);
-                    }
-                }
-                Err(CompilerErr::Unknown)   // what error here?
+                let x = self.compute_expr(*lhs)?;
+                let y = self.compute_expr(*rhs)?;
+                return self.compute_op(op, x, y);
             },
         }
     }
