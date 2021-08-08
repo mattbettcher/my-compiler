@@ -1,4 +1,6 @@
-use std::collections::{HashMap};
+use std::{collections::{HashMap}, convert::TryFrom};
+
+use crate::parse::CompilerErr;
 
 
 #[derive(Debug, PartialEq)]
@@ -12,20 +14,83 @@ pub enum LexValue {
 pub enum TokenKind {
     Int,
     Ident,
-    OpenParen,
-    CloseParen,
-    OpenBrace,
-    CloseBrace,
-    OpenBracket,
-    CloseBracket,
-    Star,
-    Slash,
+    Bang,
+    Quote,
+    Hashtag,
+    Dollar,
+    Percent,
+    Ampersand,
+    Apostrophe,
+    LeftParen,
+    RightParen,
+    Asterisk,
     Plus,
-    Dash,
-    Hat,
-    Equal,
+    Comma,
+    Hyphen,
+    Period,
+    Slash,
+    Colon,
+    SemiColon,
+    Lt,
+    Eq,
+    Gt,
+    Question,
+    At,
+    LeftBracket,
+    BackSlash,
+    RightBracket,
+    Circumflex,
+    LowLine,
+    Grave,
+    LeftBrace,
+    VerticalBar,
+    RightBrace,
+    Tilde,
     // keywords
     Let,
+}
+
+impl TryFrom<&char> for TokenKind {
+    type Error = CompilerErr;
+
+    fn try_from(value: &char) -> Result<Self, CompilerErr> {
+        use TokenKind::*;
+        match value {
+            '!' => Ok(Bang),
+            '"' => Ok(Quote),
+            '#' => Ok(Hashtag),
+            '$' => Ok(Dollar),
+            '%' => Ok(Percent),
+            '&' => Ok(Ampersand),
+            '\''=> Ok(Apostrophe),
+            '(' => Ok(LeftParen),
+            ')' => Ok(RightParen),
+            '*' => Ok(Asterisk),
+            '+' => Ok(Plus),
+            ',' => Ok(Comma),
+            '-' => Ok(Hyphen),
+            '.' => Ok(Period),
+            '/' => Ok(Slash),
+            ':' => Ok(Colon),
+            ';' => Ok(SemiColon),
+            '<' => Ok(Lt),
+            '=' => Ok(Eq),
+            '>' => Ok(Gt),
+            '?' => Ok(Question),
+            '@' => Ok(At),
+            '[' => Ok(LeftBracket),
+            '\\'=> Ok(BackSlash),
+            ']' => Ok(RightBracket),
+            '^' => Ok(Circumflex),
+            '_' => Ok(LowLine),
+            '`' => Ok(Grave),
+            '{' => Ok(LeftBrace),
+            '|' => Ok(VerticalBar),
+            '}' => Ok(RightBrace),
+            '~' => Ok(Tilde),
+            _ => Err(CompilerErr::Unknown)
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -109,18 +174,14 @@ impl<'a> Lex<'a> {
                             break 'start;
                         }
                     },
-                    '(' => { self.p += 1; self.cur = Some(Token{pos: start, kind: TokenKind::OpenParen, value: LexValue::None}); break; },
-                    ')' => { self.p += 1; self.cur = Some(Token{pos: start, kind: TokenKind::CloseParen, value: LexValue::None}); break; },
-                    '{' => { self.p += 1; self.cur = Some(Token{pos: start, kind: TokenKind::OpenBrace, value: LexValue::None}); break; },
-                    '}' => { self.p += 1; self.cur = Some(Token{pos: start, kind: TokenKind::CloseBrace, value: LexValue::None}); break; },
-                    '[' => { self.p += 1; self.cur = Some(Token{pos: start, kind: TokenKind::OpenBracket, value: LexValue::None}); break; },
-                    ']' => { self.p += 1; self.cur = Some(Token{pos: start, kind: TokenKind::CloseBracket, value: LexValue::None}); break; },
-                    '+' => { self.p += 1; self.cur = Some(Token{pos: start, kind: TokenKind::Plus, value: LexValue::None}); break; },
-                    '-' => { self.p += 1; self.cur = Some(Token{pos: start, kind: TokenKind::Dash, value: LexValue::None}); break; },
-                    '*' => { self.p += 1; self.cur = Some(Token{pos: start, kind: TokenKind::Star, value: LexValue::None}); break; },
-                    '/' => { self.p += 1; self.cur = Some(Token{pos: start, kind: TokenKind::Slash, value: LexValue::None}); break; },
-                    '^' => { self.p += 1; self.cur = Some(Token{pos: start, kind: TokenKind::Hat, value: LexValue::None}); break; },
-                    '=' => { self.p += 1; self.cur = Some(Token{pos: start, kind: TokenKind::Equal, value: LexValue::None}); break; },
+                    // this gives us all the normal characters used in programming langauges
+                    c if c.is_ascii_graphic() && !c.is_ascii_alphanumeric() => { 
+                        if let Ok(tk) = TokenKind::try_from(c) {
+                            self.p += 1; self.cur = Some(Token{pos: start, kind: tk, value: LexValue::None}); break;
+                        } else {
+                            // error
+                        }
+                    },
                     _ => { self.cur = None; break; },
                 }
             } else {
@@ -171,7 +232,7 @@ fn lex_symbols_test() {
     l.next();
     assert_eq!(l.cur, Some(Token{pos: 4, kind: TokenKind::Int, value: LexValue::Int(2)}));
     l.next();
-    assert_eq!(l.cur, Some(Token{pos: 6, kind: TokenKind::Dash, value: LexValue::None}));
+    assert_eq!(l.cur, Some(Token{pos: 6, kind: TokenKind::Hyphen, value: LexValue::None}));
     l.next();
     assert_eq!(l.cur, Some(Token{pos: 8, kind: TokenKind::Int, value: LexValue::Int(3)}));
 }

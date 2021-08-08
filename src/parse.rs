@@ -20,11 +20,11 @@ pub enum Op {
 impl From<TokenKind> for Op {
     fn from(v: TokenKind) -> Self {
         match v {
-            TokenKind::Star => Op::Mul,
+            TokenKind::Asterisk => Op::Mul,
             TokenKind::Slash => Op::Div,
             TokenKind::Plus => Op::Add,
-            TokenKind::Dash => Op::Sub,
-            TokenKind::Hat => Op::Exp,
+            TokenKind::Hyphen => Op::Sub,
+            TokenKind::Circumflex => Op::Exp,
             _ => panic!(),
         }
     }
@@ -64,10 +64,10 @@ impl Parse {
         Parse {
             op_map:
                 [(TokenKind::Plus, (1, Assoc::Left)),
-                (TokenKind::Dash, (1, Assoc::Left)),
-                (TokenKind::Star, (2, Assoc::Left)),
+                (TokenKind::Hyphen, (1, Assoc::Left)),
+                (TokenKind::Asterisk, (2, Assoc::Left)),
                 (TokenKind::Slash, (2, Assoc::Left)),
-                (TokenKind::Hat, (3, Assoc::Right))]
+                (TokenKind::Circumflex, (3, Assoc::Right))]
                 .iter().cloned().collect(),
         }
     }
@@ -94,7 +94,7 @@ impl Parse {
     pub fn parse_assign(&mut self, l: &mut Lex) -> Result<Statement, CompilerErr> {
         l.expect(TokenKind::Let);
         let name = self.parse_ident(l)?;
-        l.expect(TokenKind::Equal);
+        l.expect(TokenKind::Eq);
         let expr = self.parse_expr(l, 0)?;
         Ok(Statement::Assign(name, expr))
     }
@@ -149,10 +149,10 @@ impl Parse {
                         _ => panic!(),
                     }
                 },
-                OpenParen => { 
+                LeftParen => { 
                     l.next();
                     result = self.parse_expr(l, 1);
-                    if !l.expect(TokenKind::CloseParen) { 
+                    if !l.expect(TokenKind::RightParen) { 
                         // lexer will give an error here
                         // we choose to carry on...for now 😎
                     }
