@@ -130,28 +130,18 @@ impl<'a> Lex<'a> {
         }
     }
 
-    // todo add error
     pub fn expect(&mut self, other: TokenKind) -> bool {
-        use TokenKind::*;
         let mut r = false;
         if let Some(t) = &self.cur {
-            r = match (t.kind, other) {
-                (Int, Int) => { self.next(); true },
-                (Let, Let) => { self.next(); true },
-                (Ident, Ident) => { self.next(); true },
-                (OpenParen, OpenParen) => { self.next(); true },
-                (Equal, Equal) => { self.next(); true },
-                (CloseParen, CloseParen) => { self.next(); true },
-                (OpenBrace, OpenBrace) => { self.next(); true },
-                (CloseBrace, CloseBrace) => { self.next(); true },
-                (OpenBracket, OpenBracket) => { self.next(); true },
-                (CloseBracket, CloseBracket) => { self.next(); true },
-                // todo(matt): impl Display for TokenKind to allow better errors
-                (_, _) => { println!("Error expected `{:?}` got `{:?}`", other, t.kind); false },
-            };
+            if t.kind == other { 
+                r = true;
+                self.next();
+            } else {
+                println!("Error expected `{:?}` got `{:?}`", other, t.kind);
+            }
         } else {
             println!("Error expected `{:?}` but nothing's there!", other);
-        }
+        } 
         r
     }
 }
