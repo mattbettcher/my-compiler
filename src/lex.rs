@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap};
 
 
 #[derive(Debug, PartialEq)]
@@ -137,8 +137,10 @@ impl<'a> Lex<'a> {
         if let Some(t) = &self.cur {
             r = match (t.kind, other) {
                 (Int, Int) => { self.next(); true },
+                (Let, Let) => { self.next(); true },
                 (Ident, Ident) => { self.next(); true },
                 (OpenParen, OpenParen) => { self.next(); true },
+                (Equal, Equal) => { self.next(); true },
                 (CloseParen, CloseParen) => { self.next(); true },
                 (OpenBrace, OpenBrace) => { self.next(); true },
                 (CloseBrace, CloseBrace) => { self.next(); true },
