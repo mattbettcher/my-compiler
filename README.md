@@ -1,5 +1,7 @@
 # My Compiler
 
+**NOTE: As this progesses you may have to go back in the commits to see how it all started lol**
+
 ## How it works -
 
 1. Simple [lexer][1] returns next token.
