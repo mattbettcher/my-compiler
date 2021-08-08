@@ -23,7 +23,8 @@ fn main() -> Result<(), CompilerErr> {
     let mut p = Parse::new();
     let expr = p.parse_expr(&mut l, 1)?;
     println!("AST:\n{:#?}", expr);
-    let eval = Evaluator{};
+    let mut eval = Evaluator::new();
+    eval.init_var("x", 6);
     let result = eval.compute_expr(expr);
     println!("Final result: {:?}", result);
     

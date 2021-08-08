@@ -21,6 +21,7 @@ pub enum TokenKind {
     Plus,
     Dash,
     Hat,
+    Equal,
 }
 
 #[derive(Debug, PartialEq)]
@@ -103,6 +104,7 @@ impl<'a> Lex<'a> {
                     '*' => { self.p += 1; self.cur = Some(Token{pos: start, kind: TokenKind::Star, value: LexValue::None}); break; },
                     '/' => { self.p += 1; self.cur = Some(Token{pos: start, kind: TokenKind::Slash, value: LexValue::None}); break; },
                     '^' => { self.p += 1; self.cur = Some(Token{pos: start, kind: TokenKind::Hat, value: LexValue::None}); break; },
+                    '=' => { self.p += 1; self.cur = Some(Token{pos: start, kind: TokenKind::Equal, value: LexValue::None}); break; },
                     _ => { self.cur = None; break; },
                 }
             } else {

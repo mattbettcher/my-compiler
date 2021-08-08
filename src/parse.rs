@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::lex::{Lex, LexValue, TokenKind};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Value {
     Int(i64),
 }
@@ -32,6 +32,7 @@ impl From<TokenKind> for Op {
 #[derive(Debug, PartialEq)]
 pub enum Expr {
     Lit(Value),
+    Var(String),
     BinOp(Op, Box<Expr>, Box<Expr>),
 }
 
@@ -39,6 +40,7 @@ pub enum Expr {
 pub enum CompilerErr {
     Unknown,
     InvalidAtom,
+    VariableNotInit,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -97,15 +99,23 @@ impl Parse {
         if let Some(t) = &l.cur {
             match &t.kind {
                 Int => {
-                    match t.value {
+                    match &t.value {
                         LexValue::Int(n) => { 
-                            result = Ok(Expr::Lit(Value::Int(n)));
+                            result = Ok(Expr::Lit(Value::Int(*n)));
                             l.next();
                         },
                         _ => panic!(), 
                     }
                 },
-                Ident => todo!(),
+                Ident => { 
+                    match &t.value {
+                        LexValue::Ident(n) => { 
+                            result = Ok(Expr::Var(n.clone()));
+                            l.next();
+                        },
+                        _ => panic!(),
+                    }
+                },
                 OpenParen => { 
                     l.next();
                     result = self.parse_expr(l, 1);
