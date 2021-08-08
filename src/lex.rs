@@ -1,3 +1,5 @@
+use std::collections::{HashMap, HashSet};
+
 
 #[derive(Debug, PartialEq)]
 pub enum LexValue {
@@ -22,6 +24,8 @@ pub enum TokenKind {
     Dash,
     Hat,
     Equal,
+    // keywords
+    Let,
 }
 
 #[derive(Debug, PartialEq)]
@@ -35,6 +39,7 @@ pub struct Lex<'a> {
     p: usize,
     code: &'a str,
     chars: Vec<char>,
+    keywords: HashMap<String, TokenKind>,
     pub cur: Option<Token>,
     pub line: usize,
 }
@@ -45,9 +50,12 @@ impl<'a> Lex<'a> {
             p: 0,
             code: code,
             chars: code.chars().collect::<Vec<char>>(),
+            keywords: HashMap::new(),
             cur: None,
             line: 1,
         };
+        // add keywords here ⬇ and in the TokenKind list
+        l.keywords.insert("let".into(), TokenKind::Let);
         l.next();
         l
     }
@@ -70,11 +78,19 @@ impl<'a> Lex<'a> {
                                 _ => break,
                             }
                         }
-                        self.cur = Some(Token {
-                            pos: start,
-                            kind: TokenKind::Ident,
-                            value: LexValue::Ident(self.code[start..self.p].into())
-                        });
+                        if let Some(key) = self.keywords.get(&self.code[start..self.p]) {
+                            self.cur = Some(Token {
+                                pos: start,
+                                kind: *key,
+                                value: LexValue::None,
+                            });
+                        } else {
+                            self.cur = Some(Token {
+                                pos: start,
+                                kind: TokenKind::Ident,
+                                value: LexValue::Ident(self.code[start..self.p].into())
+                            });
+                        }
                         break 'start;
                     },
                     '0'..='9' => {
@@ -177,4 +193,13 @@ fn lex_expect_test() {
     assert_eq!(l.expect(TokenKind::Int), false);
     l.next();
     assert_eq!(l.expect(TokenKind::Ident), false);
+}
+
+#[test]
+fn lex_keyword_test() {
+    let mut l = Lex::new(" \n\n ident let 1234");
+    assert_eq!(l.cur, Some(Token{pos: 4, kind: TokenKind::Ident, value: LexValue::Ident("ident".into())}));
+    assert_eq!(l.line, 3);
+    l.next();
+    assert_eq!(l.cur, Some(Token{pos: 10, kind: TokenKind::Let, value: LexValue::None}));
 }
