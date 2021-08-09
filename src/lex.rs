@@ -3,7 +3,7 @@ use std::{collections::{HashMap}, convert::TryFrom};
 use crate::parse::CompilerErr;
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum LexValue {
     None,
     Int(i64),
@@ -48,6 +48,8 @@ pub enum TokenKind {
     Tilde,
     // keywords
     Let,
+    Fn,
+    Return,
 }
 
 impl TryFrom<&char> for TokenKind {
@@ -93,7 +95,7 @@ impl TryFrom<&char> for TokenKind {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Token {
      pub pos: usize,
      pub kind: TokenKind,
@@ -121,11 +123,13 @@ impl<'a> Lex<'a> {
         };
         // add keywords here ⬇ and in the TokenKind list
         l.keywords.insert("let".into(), TokenKind::Let);
+        l.keywords.insert("fn".into(), TokenKind::Fn);
+        l.keywords.insert("return".into(), TokenKind::Return);
         l.next();
         l
     }
 
-    pub fn next(&mut self) {
+    pub fn next(&mut self) -> Option<Token> {
         'start: loop {
             let start = self.p;
             if let Some(c) = self.chars.get(self.p) {
@@ -189,6 +193,15 @@ impl<'a> Lex<'a> {
                 break 'start;
             }
         }
+        self.cur.clone()
+    }
+
+    pub fn peek(&mut self) -> Option<Token> {
+        let p = self.p;
+        let t = self.next();
+        self.p = p;
+        self.next();
+        t
     }
 
     pub fn expect(&mut self, other: TokenKind) -> bool {
@@ -198,11 +211,23 @@ impl<'a> Lex<'a> {
                 r = true;
                 self.next();
             } else {
-                println!("Error expected `{:?}` got `{:?}`", other, t.kind);
+                println!("Error expected `{:?}` got `{:?}` at line:{:}", other, t.kind, self.line);
             }
         } else {
             println!("Error expected `{:?}` but nothing's there!", other);
         } 
+        r
+    }
+
+    pub fn maybe(&mut self, other: TokenKind) -> bool {
+        let mut r = false;
+        let tok = &self.cur;
+        if let Some(t) = tok {
+            if t.kind == other { 
+                r = true;
+                self.next();
+            }
+        }
         r
     }
 }

@@ -5,6 +5,7 @@ use crate::lex::{Lex, LexValue, TokenKind};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Value {
+    None,
     Int(i64),
 }
 
@@ -30,16 +31,19 @@ impl From<TokenKind> for Op {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Expr {
     Lit(Value),
     Var(String),
+    Call(String),
     BinOp(Op, Box<Expr>, Box<Expr>),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Statement {
+    DeclareFn(String, Vec<Statement>),
     Assign(String, Expr),
+    Return(Expr),
     Expr(Expr),
 }
 
@@ -48,6 +52,8 @@ pub enum CompilerErr {
     Unknown,
     InvalidAtom,
     VariableNotInit,
+    FuncNotDef,
+    MainNotDef,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -99,16 +105,22 @@ impl Parse {
             if let Some(t) =  &l.cur {
                 match t.kind {
                     TokenKind::Let => { stmts.push(self.parse_assign(l)?); },
-                    _ => { 
-                        stmts.push(Statement::Expr(self.parse_expr(l, 0)?));
-                        l.expect(TokenKind::SemiColon);
-                    },
+                    TokenKind::Fn => { stmts.push(self.parse_fn_decl(l)?); },
+                    TokenKind::Return => { stmts.push(self.parse_return(l)?); },
+                    _ => break ,
                 }    
             } else {
                 break;
             }
         }
         Ok(stmts)
+    }
+
+    pub fn parse_return(&mut self, l: &mut Lex) -> Result<Statement, CompilerErr> {
+        l.expect(TokenKind::Return);
+        let expr = self.parse_expr(l, 0)?;
+        l.expect(TokenKind::SemiColon);
+        Ok(Statement::Return(expr))
     }
 
     pub fn parse_assign(&mut self, l: &mut Lex) -> Result<Statement, CompilerErr> {
@@ -118,6 +130,19 @@ impl Parse {
         let expr = self.parse_expr(l, 0)?;
         l.expect(TokenKind::SemiColon);
         Ok(Statement::Assign(name, expr))
+    }
+
+    pub fn parse_fn_decl(&mut self, l: &mut Lex) -> Result<Statement, CompilerErr> {
+        l.expect(TokenKind::Fn);
+        let name = self.parse_ident(l)?;
+        l.expect(TokenKind::LeftParen);
+        // todo(matt): params go here!
+        l.expect(TokenKind::RightParen);
+        // todo(matt): return type goes here! 
+        l.expect(TokenKind::LeftBrace);
+        let block = self.parse_statements(l)?;
+        l.expect(TokenKind::RightBrace);
+        Ok(Statement::DeclareFn(name, block))
     }
 
     pub fn parse_expr(&mut self, l: &mut Lex, min_prec: usize) -> Result<Expr, CompilerErr> {
@@ -150,7 +175,7 @@ impl Parse {
         use TokenKind::*;
         let mut result = Err(CompilerErr::Unknown);
         
-        if let Some(t) = &l.cur {
+        if let Some(t) = &l.cur.clone() {
             match &t.kind {
                 Int => {
                     match &t.value {
@@ -163,9 +188,15 @@ impl Parse {
                 },
                 Ident => { 
                     match &t.value {
-                        LexValue::Ident(n) => { 
-                            result = Ok(Expr::Var(n.clone()));
+                        LexValue::Ident(n) => {
                             l.next();
+                            if l.maybe(TokenKind::LeftParen) {
+                                // todo(matt): params go here
+                                l.expect(TokenKind::RightParen);
+                                result = Ok(Expr::Call(n.clone()));
+                            } else {
+                                result = Ok(Expr::Var(n.clone()));
+                            }
                         },
                         _ => panic!(),
                     }

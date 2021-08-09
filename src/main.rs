@@ -1,4 +1,4 @@
-
+ 
 // we will handle lints later...
 //#![allow(dead_code, unused_variables, unused_labels, unused_imports, unused_mut)]
 
@@ -16,10 +16,10 @@ fn main() -> Result<(), CompilerErr> {
         let mut p = Parse::new();
         let statements = p.parse_statements(&mut l)?;
         let mut eval = Evaluator::new();
-        let mut result = Value::Int(0);
         for statement in &statements {
-            result = eval.eval_statement(statement)?;
+            eval.eval_statement(statement)?;
         }
+        let result = eval.eval_main();
         println!("Final result: {:?}", result);
     }
     

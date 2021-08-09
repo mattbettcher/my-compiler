@@ -1,0 +1,10 @@
+
+fn my_func() {
+    let y = 5;
+    return 3 * y;
+}
+
+fn main() {
+    let x = 10 + my_func();
+    return 1 + x;
+}
