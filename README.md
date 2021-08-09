@@ -15,8 +15,8 @@
 3. cargo run -- samples/{name of sample}  (in the cloned directory of course)
 
 ## TODO -
-- [ ] Add more tokens to lexer
-- [ ] Implement statements
+- [x] Add more tokens to lexer
+- [x] Implement statements
 - [ ] Implement functions
 - [ ] So much more!
 - [ ] Create a `trait` to interface from AST to backend generation

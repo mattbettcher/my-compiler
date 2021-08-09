@@ -44,7 +44,6 @@ pub enum Statement {
     DeclareFn(String, Vec<Statement>),
     Assign(String, Expr),
     Return(Expr),
-    Expr(Expr),
 }
 
 #[derive(Debug)]

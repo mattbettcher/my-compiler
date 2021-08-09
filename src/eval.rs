@@ -51,10 +51,6 @@ impl Evaluator {
             Return(expr) => {
                 return self.eval_expr(expr);
             },
-            // free standing expression is dead code now?
-            Expr(expr) => {
-                return self.eval_expr(expr);
-            },
         }
     }
 

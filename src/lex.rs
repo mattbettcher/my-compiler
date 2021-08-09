@@ -196,14 +196,6 @@ impl<'a> Lex<'a> {
         self.cur.clone()
     }
 
-    pub fn peek(&mut self) -> Option<Token> {
-        let p = self.p;
-        let t = self.next();
-        self.p = p;
-        self.next();
-        t
-    }
-
     pub fn expect(&mut self, other: TokenKind) -> bool {
         let mut r = false;
         if let Some(t) = &self.cur {

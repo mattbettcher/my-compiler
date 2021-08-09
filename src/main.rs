@@ -7,7 +7,7 @@ mod parse;
 mod eval;
 
 use lex::Lex;
-use crate::{eval::Evaluator, parse::{CompilerErr, Parse, Value}};
+use crate::{eval::Evaluator, parse::{CompilerErr, Parse}};
 
 fn main() -> Result<(), CompilerErr> {
     for arg in std::env::args().skip(1) {
